@@ -52,7 +52,7 @@ Route::prefix('cesta')->name('public.cesta.')->group(function () {
     Route::patch('/cantidad/{id}',      [CestaController::class, 'updateQty'])->name('qty');
     Route::delete('/item/{id}',         [CestaController::class, 'remove'])->name('remove');
     Route::delete('/vaciar',            [CestaController::class, 'clear'])->name('clear');
-    Route::get('/tramitar',             [CestaController::class, 'checkout'])->name('checkout');
+    // Route::get('/tramitar',             [CestaController::class, 'checkout'])->name('checkout');
 });
 Route::get('/cesta/checkout', [CestaController::class, 'checkout'])
     ->name('public.cesta.checkout');
