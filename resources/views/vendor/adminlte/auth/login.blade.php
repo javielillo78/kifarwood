@@ -5,25 +5,16 @@
 @stop
 
 @php
-    $loginUrl     = trim($__env->yieldContent('login_url')) ?: config('adminlte.login_url', 'login');
-    $registerUrl  = trim($__env->yieldContent('register_url')) ?: config('adminlte.register_url', 'register');
-    $passResetUrl = trim($__env->yieldContent('password_reset_url')) ?: config('adminlte.password_reset_url', 'password/reset');
-
-    if (config('adminlte.use_route_url', false)) {
-        $loginUrl     = $loginUrl ? route($loginUrl) : '';
-        $registerUrl  = $registerUrl ? route($registerUrl) : '';
-        $passResetUrl = $passResetUrl ? route($passResetUrl) : '';
-    } else {
-        $loginUrl     = $loginUrl ? url($loginUrl) : '';
-        $registerUrl  = $registerUrl ? url($registerUrl) : '';
-        $passResetUrl = $passResetUrl ? url($passResetUrl) : '';
-    }
+    // Usamos SIEMPRE rutas nombradas o URLs relativas seguras
+    $loginUrl     = route('login');
+    $registerUrl  = route('register');
+    $passResetUrl = route('password.request');
 @endphp
 
 @section('auth_header', __('adminlte::adminlte.login_message'))
 
 @section('auth_body')
-    <form action="{{ $loginUrl }}" method="post">
+    <form action="{{ $loginUrl }}" method="POST">
         @csrf
 
         {{-- Email field --}}
@@ -49,12 +40,6 @@
             <input type="password" name="password" class="form-control @error('password') is-invalid @enderror"
                 placeholder="{{ __('adminlte::adminlte.password') }}">
 
-            {{-- <div class="input-group-append">
-                <div class="input-group-text">
-                    <span class="fas fa-lock {{ config('adminlte.classes_auth_icon', '') }}"></span>
-                </div>
-            </div> --}}
-
             <div class="input-group-append">
                 <div class="input-group-text" id="togglePassword" style="cursor: pointer;">
                     <span class="fas fa-eye"></span>
@@ -68,7 +53,7 @@
             @enderror
         </div>
 
-        {{-- Login field --}}
+        {{-- Login row --}}
         <div class="row">
             <div class="col-7">
                 <div class="icheck-primary" title="{{ __('adminlte::adminlte.remember_me_hint') }}">
@@ -80,7 +65,7 @@
                 </div>
             </div>
 
-            {{-- CAPTCHA (dentro del form) --}}
+            {{-- CAPTCHA --}}
             <div class="form-group mt-3">
                 {!! NoCaptcha::display() !!}
                 @error('g-recaptcha-response')
@@ -89,7 +74,7 @@
             </div>
 
             <div class="col-5">
-                <button type=submit class="btn btn-block {{ config('adminlte.classes_auth_btn', 'btn-flat btn-primary') }}">
+                <button type="submit" class="btn btn-block {{ config('adminlte.classes_auth_btn', 'btn-flat btn-primary') }}">
                     <span class="fas fa-sign-in-alt"></span>
                     {{ __('adminlte::adminlte.sign_in') }}
                 </button>
@@ -120,7 +105,6 @@
 @endsection
 
 @section('auth_footer')
-    {{-- Password reset link --}}
     @if($passResetUrl)
         <p class="my-0">
             <a href="{{ $passResetUrl }}">
@@ -129,7 +113,6 @@
         </p>
     @endif
 
-    {{-- Register link --}}
     @if($registerUrl)
         <p class="my-0">
             <a href="{{ $registerUrl }}">
