@@ -42,22 +42,31 @@ class LoginController extends Controller
 
     public function login(\Illuminate\Http\Request $request)
     {
-        $request->validate([
-            'email' => ['required','email'],
-            'password' => ['required'],
-            // 'g-recaptcha-response' => ['required','captcha'],
-        ]);
-        if (Auth::attempt($request->only('email','password'), $request->filled('remember'))) {
-            $request->session()->regenerate();
-            $user = Auth::user();
-            return $user->rol === 'admin'
-                ? redirect()->route('admin.dashboard')  
-                : redirect()->route('public.index'); 
+        try {
+            $request->validate([
+                'email' => ['required', 'email'],
+                'password' => ['required'],
+                // 'g-recaptcha-response' => ['required','captcha'],
+            ]);
+
+            if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
+                $request->session()->regenerate();
+                $user = Auth::user();
+
+                return $user->rol === 'admin'
+                    ? redirect()->route('admin.dashboard')
+                    : redirect()->route('public.index');
+            }
+
+            return back()->withErrors([
+                'email' => 'Las credenciales no son válidas.',
+            ])->onlyInput('email');
+        } catch (\Throwable $e) {
+            // MOSTRAR INFO DEL ERROR EN EL NAVEGADOR
+            dd($e->getMessage(), $e->getFile(), $e->getLine());
         }
-        return back()->withErrors(['email' => 'Las credenciales no son válidas.'])
-                    ->onlyInput('email');
     }
-    
+
     protected function authenticated(Request $request, $user)
     {
         session()->flash('login_ok', 'Has iniciado sesión correctamente.');
