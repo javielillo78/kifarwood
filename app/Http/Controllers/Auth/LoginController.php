@@ -9,66 +9,36 @@ use Illuminate\Foundation\Auth\AuthenticatesUsers;
 
 class LoginController extends Controller
 {
-    /*
-    |--------------------------------------------------------------------------
-    | Login Controller
-    |--------------------------------------------------------------------------
-    |
-    | This controller handles authenticating users for the application and
-    | redirecting them to your home screen. The controller uses a trait
-    | to conveniently provide its functionality to your applications.
-    |
-    */
-
     use AuthenticatesUsers;
 
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
     protected $redirectTo = '/';
 
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
     public function __construct()
     {
         $this->middleware('guest')->except('logout');
         $this->middleware('auth')->only('logout');
     }
 
-    public function login(\Illuminate\Http\Request $request)
+    public function login(Request $request)
     {
-        try {
-            $request->validate([
-                'email' => ['required', 'email'],
-                'password' => ['required'],
-                // 'g-recaptcha-response' => ['required','captcha'],
-            ]);
-
-            if (Auth::attempt($request->only('email', 'password'), $request->filled('remember'))) {
-                $request->session()->regenerate();
-                $user = Auth::user();
-
-                return $user->rol === 'admin'
-                    ? redirect()->route('admin.dashboard')
-                    : redirect()->route('public.index');
+        $request->validate([
+            'email'                => ['required','email'],
+            'password'             => ['required'],
+            'g-recaptcha-response' => ['required','captcha'],
+        ]);
+        if (Auth::attempt($request->only('email','password'), $request->filled('remember'))) {
+            $request->session()->regenerate();
+            $user = Auth::user();
+            if ($user->rol === 'admin') {
+                return redirect()
+                    ->route('admin.dashboard')
+                    ->with('login_ok', 'Has iniciado sesión correctamente.');
             }
-
-            return back()->withErrors([
-                'email' => 'Las credenciales no son válidas.',
-            ])->onlyInput('email');
-        } catch (\Throwable $e) {
-            // MOSTRAR INFO DEL ERROR EN EL NAVEGADOR
-            dd($e->getMessage(), $e->getFile(), $e->getLine());
+            return redirect()
+                ->intended(route('public.cesta.checkout'));
         }
-    }
-
-    protected function authenticated(Request $request, $user)
-    {
-        session()->flash('login_ok', 'Has iniciado sesión correctamente.');
+        return back()
+            ->withErrors(['email' => 'Las credenciales no son válidas.'])
+            ->onlyInput('email');
     }
 }

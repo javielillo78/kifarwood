@@ -151,9 +151,6 @@
             <small>CTRA. A - 440 KM.7, LA · 14120 FUENTE PALMERA</small><br>
             <small>B67655993</small>
         </div>
-        {{-- <div class="col">
-            <div class="header-blue" style="margin-left:10px;">FACTURA</div>
-        </div> --}}
     </div>
 
     <div class="subband" style="margin-bottom:4px;">

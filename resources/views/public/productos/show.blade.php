@@ -54,8 +54,7 @@
                     ? (Str::startsWith($src, ['http','//']) ? $src : asset(ltrim($src, '/')))
                     : asset('images/place.png');
               @endphp
-              <a href="#prodShow-{{ $producto->id }}" data-target="#prodShow-{{ $producto->id }}" data-slide-to="{{ $i }}"
-                 class="d-block" style="width:74px;height:60px;border-radius:10px;overflow:hidden;border:1px solid #2a292a">
+              <a href="#prodShow-{{ $producto->id }}" data-target="#prodShow-{{ $producto->id }}" data-slide-to="{{ $i }}" class="d-block" style="width:74px;height:60px;border-radius:10px;overflow:hidden;border:1px solid #2a292a">
                 <img src="{{ $thumb }}" class="w-100 h-100" style="object-fit:cover" alt="thumb {{ $i+1 }}">
               </a>
             @endforeach
@@ -63,19 +62,17 @@
         @endif
       </div>
     </div>
-
     <div class="col-lg-6 mb-3">
       <div class="glass p-4 h-100 position-relative">
         <a href="{{ route('public.productos.index') }}" class="btn btn-login btn-sm" style="position:absolute; top:12px; right:12px; z-index:2">
           <i class="fa fa-arrow-left mr-1"></i> Volver
         </a>
-
         @php
           $stockDisp = (int)($producto->stock ?? 0);
-
           $enCarrito = 0;
           if (auth()->check()) {
-              $pedidoTmp = \App\Models\Pedido::where('user_id', auth()->id())->where('estado','carrito')->first();
+              $pedidoTmp = \App\Models\Pedido::where('user_id', auth()->id())
+                          ->where('estado','carrito')->first();
               if ($pedidoTmp) {
                   $detTmp = $pedidoTmp->detalles()->where('producto_id', $producto->id)->first();
                   $enCarrito = (int)($detTmp->cantidad ?? 0);
@@ -86,7 +83,6 @@
           }
           $maxAdd = max(0, $stockDisp - $enCarrito);
         @endphp
-
         <div class="d-flex align-items-center mb-2" style="gap:10px">
           <span class="badge badge-light">{{ $producto->categoria->nombre ?? '—' }}</span>
           @if($stockDisp > 0)
@@ -95,20 +91,21 @@
             <span class="badge badge-secondary">Sin stock</span>
           @endif
         </div>
-
         <h1 class="mb-2" style="font-weight:800">{{ $producto->nombre }}</h1>
         <div class="mb-3" style="font-size:1.4rem;font-weight:800;color:#ffdede">
           {{ number_format($producto->precio,2,',','.') }} €
         </div>
-
         @if($producto->descripcion)
           <div class="text-muted mb-4" style="line-height:1.6">{{ $producto->descripcion }}</div>
         @endif
-
         <div class="d-flex align-items-center" style="gap:10px">
-          @if($stockDisp <= 0 || $maxAdd <= 0)
+          @if($stockDisp <= 0)
             <button class="btn btn-secondary" disabled style="opacity:.8;cursor:not-allowed">
-              No disponible en stock
+              Sin stock disponible
+            </button>
+          @elseif($maxAdd <= 0)
+            <button class="btn btn-secondary" disabled style="opacity:.8;cursor:not-allowed">
+              No puedes añadir más unidades
             </button>
           @else
             <form action="{{ route('public.cesta.add', $producto) }}" method="POST" class="d-flex align-items-center" style="gap:10px">
@@ -120,21 +117,33 @@
             </form>
           @endif
         </div>
-
-        @if($stockDisp > 0 && $maxAdd < 3 && $maxAdd > 0)
-          <div class="alert alert-danger mt-2 mb-0" style="background:rgba(220,53,69,.12); border-color:rgba(220,53,69,.35); color:#dc3545;">
-            Solo puedes añadir {{ $maxAdd }} unidad(es) más (límite por stock).
-          </div>
-        @endif
-
-        @if(session('cart_err'))
-          <div class="alert alert-danger mt-3">{{ session('cart_err') }}</div>
-        @endif
-
-        @if(session('cart_ok'))
-          <div class="alert alert-success mt-3">{{ session('cart_ok') }}</div>
-        @endif
-
+        <div class="mt-3">
+          @if(session('cart_err'))
+            <div class="alert alert-danger mb-2" style="background:rgba(220,53,69,.12);border-color:rgba(220,53,69,.35);color:#ffc4cc;">
+              <i class="fa fa-circle-exclamation mr-1"></i>
+              {{ session('cart_err') }}
+            </div>
+          @endif
+          @if(session('cart_ok'))
+            <div class="alert alert-success mb-0" style="background:rgba(40,167,69,.14);border-color:rgba(40,167,69,.35);color:#c7ffd7;">
+              <i class="fa fa-check-circle mr-1"></i>
+              {{ session('cart_ok') }}
+            </div>
+          @endif
+        </div>
+        <div class="mt-3">
+          @if($stockDisp > 0 && $maxAdd > 0 && $maxAdd <= 2)
+              <div class="alert alert-warning mb-2" style="background:rgba(255,193,7,.10);border-color:rgba(255,193,7,.35);color:#ffe29a;">
+                <i class="fa fa-exclamation-triangle mr-1"></i>
+                Solo puedes añadir <strong>{{ $maxAdd }}</strong> unidad(es) más de este producto.
+              </div>
+            @elseif($maxAdd <= 0 && $stockDisp > 0)
+              <div class="alert alert-danger mb-2" style="background:rgba(220,53,69,.12);border-color:rgba(220,53,69,.35);color:#ffc4cc;">
+                <i class="fa fa-ban mr-1"></i>
+                Has alcanzado el número máximo de unidades disponibles de este producto.
+              </div>
+            @endif
+        </div>
         <hr class="my-4" style="border-color:#2a292a">
         <small class="text-muted">Ref. PROD-{{ str_pad($producto->id, 5, '0', STR_PAD_LEFT) }}</small>
       </div>

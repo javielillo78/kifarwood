@@ -100,74 +100,90 @@ class CestaController extends Controller
             return back()->with('cart_err', 'No hay stock disponible de este producto.');
         }
 
-        $yaLleva = 0;
         if ($request->user()) {
-            $pedido = $this->carritoDe($request->user()->id);
-            $existente = $pedido->detalles()->where('producto_id', $producto->id)->first();
-            $yaLleva = (int)($existente->cantidad ?? 0);
+            $pedido  = $this->carritoDe($request->user()->id);
+
+            $detalle = $pedido->detalles()->firstOrNew([
+                'producto_id' => $producto->id,
+            ]);
+
+            $yaLleva = (int)($detalle->exists ? $detalle->cantidad : 0);
         } else {
-            $cookie = $this->readCookie();
-            $yaLleva = (int)($cookie[$producto->id]['qty'] ?? 0);
+            $cart    = $this->readCookie();
+            $yaLleva = (int)($cart[$producto->id]['qty'] ?? 0);
+            $detalle = null;
+            $pedido  = null;
         }
 
-        $disponible = max(0, $stock - $yaLleva);
-        if ($disponible <= 0) {
-            return back()->with('cart_err', 'No hay más stock disponible de este producto.');
+        // Máximo permitido por stock total (no se reserva hasta pagar)
+        $maxPosible = $stock;
+
+        if ($yaLleva >= $maxPosible) {
+            return back()->with('cart_err', 'No puedes añadir más unidades de este producto.');
         }
 
-        $qty = min($qtySolicitada, $disponible);
+        $qtyAAgregar = min($qtySolicitada, $maxPosible - $yaLleva);
 
-        $mensaje = 'Producto añadido a la cesta.';
-        $flashKey = 'cart_ok';
-
-        if ($qty < $qtySolicitada) {
-            $mensaje  = 'Solo había '.$disponible.' unidades disponibles. Cantidad ajustada en la cesta.';
-            $flashKey = 'cart_err';
+        if ($qtyAAgregar <= 0) {
+            return back()->with('cart_err', 'No puedes añadir más unidades de este producto.');
         }
 
         if ($request->user()) {
-            $pedido = $this->carritoDe($request->user()->id);
-            $detalle = $pedido->detalles()->firstOrNew(['producto_id' => $producto->id]);
-            $detalle->cantidad = ($detalle->exists ? (int)$detalle->cantidad : 0) + $qty;
+            // Aquí $detalle ya tiene pedido_id porque viene de la relación firstOrNew
             $detalle->precio_unitario = (float)$producto->precio;
-            $detalle->subtotal = $detalle->cantidad * $detalle->precio_unitario;
+            $detalle->cantidad        = $yaLleva + $qtyAAgregar;
+            $detalle->subtotal        = $detalle->cantidad * $detalle->precio_unitario;
             $detalle->save();
+
             $pedido->total = $pedido->detalles()->sum('subtotal');
             $pedido->save();
         } else {
             $cart = $this->readCookie();
+
             if (isset($cart[$producto->id])) {
-                $cart[$producto->id]['qty'] += $qty;
+                $cart[$producto->id]['qty'] += $qtyAAgregar;
             } else {
-                $cart[$producto->id] = $this->buildItemArrayFromModels($producto, $qty);
+                $cart[$producto->id] = $this->buildItemArrayFromModels($producto, $qtyAAgregar);
             }
+
             $this->writeCookie($cart);
         }
 
-        return back()->with($flashKey, $mensaje);
+        return back()->with('cart_ok', 'Producto añadido a la cesta.');
     }
 
    public function updateQty(Request $request, $id)
     {
-        $qtySolicitada = max(1, (int)$request->input('qty', 1));
-        $producto = \App\Models\Producto::find((int)$id);
+        $producto = Producto::find((int)$id);
+
         if (!$producto) {
             return back()->with('cart_err', 'Producto no encontrado.');
         }
 
-        $stock = (int)($producto->stock ?? 0);
-        $qty   = min($qtySolicitada, max(0, $stock));
-
-        $mensaje = 'Cantidad actualizada.';
-        $flashKey = 'cart_ok';
+        $stock         = (int)($producto->stock ?? 0);
+        $qtySolicitada = max(1, (int)$request->input('qty', 1));
 
         if ($stock <= 0) {
-            $qty = 0;
-            $mensaje  = 'No hay stock disponible de este producto. Se ha eliminado de la cesta.';
-            $flashKey = 'cart_err';
-        } elseif ($qtySolicitada > $stock) {
-            $mensaje  = 'No hay más stock disponible de este producto.';
-            $flashKey = 'cart_err';
+            if ($request->user()) {
+                $pedido = $this->carritoDe($request->user()->id);
+                $pedido->detalles()->where('producto_id', $producto->id)->delete();
+                $pedido->total = $pedido->detalles()->sum('subtotal');
+                $pedido->save();
+            } else {
+                $cart = $this->readCookie();
+                unset($cart[$producto->id]);
+                $this->writeCookie($cart);
+            }
+
+            return back()->with('cart_err', 'Este producto ya no está disponible.');
+        }
+
+        if ($qtySolicitada > $stock) {
+            $qty     = $stock;
+            $mensaje = 'No puedes añadir más unidades de este producto. Se ha ajustado a la cantidad máxima disponible.';
+        } else {
+            $qty     = $qtySolicitada;
+            $mensaje = 'Cantidad actualizada.';
         }
 
         if ($request->user()) {
@@ -188,6 +204,7 @@ class CestaController extends Controller
             }
         } else {
             $cart = $this->readCookie();
+
             if (isset($cart[$producto->id])) {
                 if ($qty <= 0) {
                     unset($cart[$producto->id]);
@@ -197,7 +214,7 @@ class CestaController extends Controller
                 $this->writeCookie($cart);
             }
         }
-        return back()->with($flashKey, $mensaje);
+        return back()->with('cart_ok', $mensaje);
     }
 
     public function remove(Request $request, $id)
@@ -230,47 +247,39 @@ class CestaController extends Controller
         return back()->with('cart_ok', 'Cesta vaciada.');
     }
     
-    public function checkout(\Illuminate\Http\Request $request)
+    public function checkout(Request $request)
     {
-        $items = [];
+        $user = $request->user();
 
-        if ($request->user()) {
-            $pedido = $this->carritoDe($request->user()->id)->load('detalles.producto');
-            if ($pedido) {
-                foreach ($pedido->detalles as $d) {
-                    $items[] = [
-                        'name'     => $d->producto->nombre ?? '—',
-                        'img'      => $d->producto->imagenes()->orderBy('orden')->first()?->ruta,
-                        'price'    => (float) $d->precio_unitario,
-                        'qty'      => (int) $d->cantidad,
-                        'subtotal' => (float) $d->subtotal,
-                        'id'       => (int) $d->producto_id,
-                    ];
-                }
-            }
-        } else {
-            $cart = $this->readCookie();
-            foreach ($cart as $row) {
-                $price = (float)($row['price'] ?? 0);
-                $qty   = (int)($row['qty'] ?? 0);
-                $items[] = [
-                    'name'     => $row['name'] ?? '—',
-                    'img'      => $row['img'] ?? null,
-                    'price'    => $price,
-                    'qty'      => $qty,
-                    'subtotal' => $price * $qty,
-                    'id'       => (int)($row['id'] ?? 0),
-                ];
-            }
+        $pedido = Pedido::with('detalles.producto')
+            ->where('user_id', $user->id)
+            ->where('estado', 'carrito')
+            ->first();
+
+        if (!$pedido || $pedido->detalles->count() === 0) {
+            return redirect()
+                ->route('public.cesta.index')
+                ->with('cart_err', 'Tu cesta está vacía.');
+        }
+
+        $items = [];
+        foreach ($pedido->detalles as $d) {
+            $items[] = [
+                'name'     => $d->producto->nombre ?? '—',
+                'img'      => $d->producto->imagenes()->orderBy('orden')->first()?->ruta,
+                'price'    => (float) $d->precio_unitario,
+                'qty'      => (int) $d->cantidad,
+                'subtotal' => (float) $d->subtotal,
+                'id'       => (int) $d->producto_id,
+            ];
         }
 
         $total = array_sum(array_map(fn($i) => $i['subtotal'], $items));
-        $base = round($total / 1.21, 2);
-        $iva  = round($total - $base, 2);
+        $base  = round($total / 1.21, 2);
+        $iva   = round($total - $base, 2);
 
         return view('public.cesta.checkout', compact('items','total','base','iva'));
     }
-
 
     public function confirmar(\Illuminate\Http\Request $request)
     {
