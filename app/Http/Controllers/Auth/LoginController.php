@@ -45,7 +45,7 @@ class LoginController extends Controller
         $request->validate([
             'email' => ['required','email'],
             'password' => ['required'],
-            'g-recaptcha-response' => ['required','captcha'],
+            // 'g-recaptcha-response' => ['required','captcha'],
         ]);
         if (Auth::attempt($request->only('email','password'), $request->filled('remember'))) {
             $request->session()->regenerate();
