@@ -137,9 +137,6 @@
             <a class="nav-link {{ request()->routeIs('public.index') ? 'active' : '' }}" href="{{ route('public.index') }}">{{ __('site.nav.home') }}</a>
           </li>
           <li class="nav-item">
-            <a class="nav-link {{ request()->routeIs('public.index') ? 'active' : '' }}" href="{{ route('public.index') }}">{{ __('site.nav.home') }}</a>
-          </li>
-          <li class="nav-item">
             <a class="nav-link {{ request()->routeIs('public.productos.*') ? 'active' : '' }}" href="{{ route('public.productos.index') }}">{{ __('site.nav.products') }}</a>
           </li>
           <li class="nav-item">
