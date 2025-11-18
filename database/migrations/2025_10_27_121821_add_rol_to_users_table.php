@@ -11,9 +11,11 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::table('users', function (Blueprint $table) {
-            $table->string('rol', 50)->default('cliente')->after('email_verified_at');
-        });
+        if (!Schema::hasTable('users')) {
+            Schema::table('users', function (Blueprint $table) {
+                $table->string('rol', 50)->default('cliente')->after('email_verified_at');
+            });
+        }
     }
 
     /**

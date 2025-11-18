@@ -11,16 +11,18 @@ return new class extends Migration
      */
     public function up(): void
     {
-       Schema::create('imagenes', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('producto_id')
-                  ->constrained('productos')
-                  ->cascadeOnUpdate()
-                  ->cascadeOnDelete(); //si borramos el producto se borran las imagenes
-            $table->string('ruta', 255);
-            $table->unsignedInteger('orden')->nullable(); //carrusel
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('imagenes')) {
+            Schema::create('imagenes', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('producto_id')
+                    ->constrained('productos')
+                    ->cascadeOnUpdate()
+                    ->cascadeOnDelete();
+                $table->string('ruta', 255);
+                $table->unsignedInteger('orden')->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

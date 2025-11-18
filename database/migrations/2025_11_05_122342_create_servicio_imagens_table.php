@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('servicio_imagens', function (Illuminate\Database\Schema\Blueprint $table) {
-            $table->id();
-            $table->foreignId('servicio_id')->constrained('servicios')->cascadeOnDelete();
-            $table->string('ruta');
-            $table->unsignedInteger('orden')->default(1);
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('servicio_imagens')) {
+            Schema::create('servicio_imagens', function (Illuminate\Database\Schema\Blueprint $table) {
+                $table->id();
+                $table->foreignId('servicio_id')->constrained('servicios')->cascadeOnDelete();
+                $table->string('ruta');
+                $table->unsignedInteger('orden')->default(1);
+                $table->timestamps();
+            });
+        }
     }
 
     /**

@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pedidos', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained('users')->cascadeOnUpdate()->restrictOnDelete();
-            $table->dateTime('fecha_pedido')->default(now());
-            $table->string('estado', 50)->default('pendiente');
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('pedidos')) {
+            Schema::create('pedidos', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('user_id')->constrained('users')->cascadeOnUpdate()->restrictOnDelete();
+                $table->dateTime('fecha_pedido')->default(now());
+                $table->string('estado', 50)->default('pendiente');
+                $table->timestamps();
+            });
+        }
     }
 
     /**

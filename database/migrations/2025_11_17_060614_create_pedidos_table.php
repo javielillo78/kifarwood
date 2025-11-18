@@ -10,7 +10,7 @@ return new class extends Migration {
             Schema::create('pedidos', function (Blueprint $table) {
                 $table->id();
                 $table->foreignId('user_id')->constrained()->cascadeOnDelete();
-                $table->string('estado')->default('carrito'); // carrito, pendiente, pagado, etc.
+                $table->string('estado')->default('carrito');
                 $table->decimal('total', 10, 2)->default(0);
                 $table->timestamps();
 

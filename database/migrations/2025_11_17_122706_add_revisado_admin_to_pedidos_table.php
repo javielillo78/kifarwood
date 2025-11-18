@@ -8,11 +8,13 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('pedidos', function (Blueprint $table) {
-            $table->boolean('revisado_admin')
-                ->default(false)
-                ->after('estado');
-        });
+        if (!Schema::hasTable('pedidos')) {
+            Schema::table('pedidos', function (Blueprint $table) {
+                $table->boolean('revisado_admin')
+                    ->default(false)
+                    ->after('estado');
+            });
+        }
     }
 
     public function down(): void

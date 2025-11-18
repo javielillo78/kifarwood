@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('entradas_stock', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('producto_id')->constrained('productos')->cascadeOnUpdate()->restrictOnDelete();
-            $table->dateTime('fecha')->default(now());
-            $table->unsignedInteger('unidades')->default(0);
-            $table->decimal('precio_compra', 10, 2)->default(0);
-            $table->string('origen', 150)->nullable();
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('entradas_stock')) {
+            Schema::create('entradas_stock', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('producto_id')->constrained('productos')->cascadeOnUpdate()->restrictOnDelete();
+                $table->dateTime('fecha')->default(now());
+                $table->unsignedInteger('unidades')->default(0);
+                $table->decimal('precio_compra', 10, 2)->default(0);
+                $table->string('origen', 150)->nullable();
+                $table->timestamps();
+            });
+        }
     }
 
     /**

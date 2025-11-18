@@ -11,13 +11,15 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('pagos', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('pedido_id')->constrained('pedidos')->cascadeOnUpdate()->restrictOnDelete();
-            $table->decimal('importe', 10, 2)->default(0);
-            $table->dateTime('fecha_pago')->default(now()); 
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('pagos')) {
+            Schema::create('pagos', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('pedido_id')->constrained('pedidos')->cascadeOnUpdate()->restrictOnDelete();
+                $table->decimal('importe', 10, 2)->default(0);
+                $table->dateTime('fecha_pago')->default(now()); 
+                $table->timestamps();
+            });
+        }
     }
 
     /**

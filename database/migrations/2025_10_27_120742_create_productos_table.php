@@ -11,15 +11,17 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('productos', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('categoria_id')->constrained('categorias')->cascadeOnUpdate()->restrictOnDelete();
-            $table->string('nombre', 150);
-            $table->text('descripcion')->nullable();
-            $table->decimal('precio', 10, 2);
-            $table->unsignedInteger('stock')->default(0); //no valores negativos
-            $table->timestamps();
-        });
+        if (!Schema::hasTable('productos')) {
+            Schema::create('productos', function (Blueprint $table) {
+                $table->id();
+                $table->foreignId('categoria_id')->constrained('categorias')->cascadeOnUpdate()->restrictOnDelete();
+                $table->string('nombre', 150);
+                $table->text('descripcion')->nullable();
+                $table->decimal('precio', 10, 2);
+                $table->unsignedInteger('stock')->default(0);
+                $table->timestamps();
+            });
+        }
     }
 
     /**
