@@ -281,9 +281,26 @@ class CestaController extends Controller
         return view('public.cesta.checkout', compact('items','total','base','iva'));
     }
 
-    public function confirmar(\Illuminate\Http\Request $request)
+    public function confirmar(Request $request)
     {
         $user = $request->user();
+
+        $data = $request->validate([
+            'nif'       => ['required','string','max:20'],
+            'direccion' => ['required','string','max:255'],
+            'cp'        => ['required','string','max:10'],
+            'ciudad'    => ['required','string','max:120'],
+            'provincia' => ['required','string','max:120'],
+            'telefono'  => ['nullable','string','max:20'],
+        ]);
+
+        $user->nif       = $data['nif'];
+        $user->direccion = $data['direccion'];
+        $user->cp        = $data['cp'];
+        $user->ciudad    = $data['ciudad'];
+        $user->provincia = $data['provincia'];
+        $user->telefono  = $data['telefono'] ?? null;
+        $user->save();
 
         $pedido = $this->carritoDe($user->id)->load('detalles.producto');
         if (!$pedido || $pedido->detalles()->count() === 0) {

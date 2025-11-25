@@ -21,8 +21,9 @@
                 <thead>
                 <tr>
                     <th>ID</th>
-                    <th>Categoría</th>
                     <th>Nombre</th>
+                    <th>Categoría</th>
+                    <th>Proveedor</th>
                     <th>Precio (€)</th>
                     <th>Stock</th>
                     {{-- <th>Imágenes</th> --}}
@@ -33,8 +34,9 @@
                 @forelse ($productos as $producto)
                     <tr>
                         <td>{{ $producto->id }}</td>
-                        <td>{{ $producto->categoria?->nombre ?? '—' }}</td>
                         <td>{{ $producto->nombre }}</td>
+                        <td>{{ $producto->categoria?->nombre ?? '—' }}</td>
+                        <td>{{ $producto->proveedor?->nombre ?? '—' }}</td>
                         <td>{{ number_format($producto->precio, 2, ',', '.') }} €</td>
                         <td>{{ $producto->stock }}</td>
                         {{-- <td>

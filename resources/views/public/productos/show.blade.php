@@ -135,7 +135,7 @@
           @if($stockDisp > 0 && $maxAdd > 0 && $maxAdd <= 2)
               <div class="alert alert-warning mb-2" style="background:rgba(255,193,7,.10);border-color:rgba(255,193,7,.35);color:#ffe29a;">
                 <i class="fa fa-exclamation-triangle mr-1"></i>
-                Solo puedes añadir <strong>{{ $maxAdd }}</strong> unidad(es) más de este producto.
+                Solo puedes añadir <strong>{{ $maxAdd }}</strong> unidad(es) de este producto.
               </div>
             @elseif($maxAdd <= 0 && $stockDisp > 0)
               <div class="alert alert-danger mb-2" style="background:rgba(220,53,69,.12);border-color:rgba(220,53,69,.35);color:#ffc4cc;">

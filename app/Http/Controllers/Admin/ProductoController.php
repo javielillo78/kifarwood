@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\Producto;
 use App\Models\Categoria;
+use App\Models\Proveedor;
 use App\Models\Imagen;
 use Illuminate\Support\Facades\Storage;
 
@@ -29,7 +30,8 @@ class ProductoController extends Controller
     public function create()
     {
         $categorias = Categoria::orderBy('nombre')->get();
-        return view('admin.productos.create', compact('categorias'));
+        $proveedores = Proveedor::orderBy('nombre')->get();
+        return view('admin.productos.create', compact('categorias','proveedores'));
     }
 
     /**
@@ -45,6 +47,7 @@ class ProductoController extends Controller
             'stock' => ['required', 'integer', 'min:0'],
             'imagenes' => ['nullable','array'],
             'imagenes.*' => ['image','mimes:jpeg,jpg,png,webp','max:10240'],
+            'proveedor_id' => ['nullable','exists:proveedores,id'],
         ]);
         $producto = Producto::create($request->only([
             'nombre',
@@ -52,6 +55,7 @@ class ProductoController extends Controller
             'descripcion',
             'precio',
             'stock',
+            'proveedor_id' => $data['proveedor_id'] ?? null,
         ]));
         if ($request->hasFile('imagenes')) {
             foreach ($request->file('imagenes') as $idx => $file) {
@@ -83,7 +87,8 @@ class ProductoController extends Controller
     public function edit(Producto $producto)
     {
         $categorias = Categoria::orderBy('nombre')->get();
-        return view('admin.productos.edit', compact('producto', 'categorias'));
+        $proveedores = Proveedor::orderBy('nombre')->get();
+        return view('admin.productos.edit', compact('producto', 'categorias','proveedores'));
     }
 
     /**
@@ -99,10 +104,12 @@ class ProductoController extends Controller
             'stock'         => ['required','integer','min:0'],
             'imagenes'      => ['nullable','array'],                   
             'imagenes.*'    => ['image','mimes:jpeg,jpg,png,webp','max:10240'], 
+            'proveedor_id' => ['nullable','exists:proveedores,id'],
         ]);
         // Actualiza datos base
         $producto->update($request->only([
-            'nombre','categoria_id','descripcion','precio','stock',
+            'nombre','categoria_id','descripcion','precio','stock','proveedor_id' => $data['proveedor_id'] ?? null,
+            
         ]));
         // Anexa nuevas imágenes si las hay
         if ($request->hasFile('imagenes')) {

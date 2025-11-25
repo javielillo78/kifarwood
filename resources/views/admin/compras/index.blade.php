@@ -34,7 +34,11 @@
                         <option value="">-- Selecciona producto --</option>
                         @foreach($productos as $p)
                             <option value="{{ $p->id }}" {{ old('producto_id') == $p->id ? 'selected' : '' }}>
-                                {{ $p->nombre }} (stock actual: {{ $p->stock ?? 0 }})
+                                {{ $p->nombre }}
+                                @if($p->proveedor)
+                                    — {{ $p->proveedor->nombre }}
+                                @endif
+                                (stock actual: {{ $p->stock ?? 0 }})
                             </option>
                         @endforeach
                     </select>
@@ -56,13 +60,16 @@
                 <button type="submit" class="btn btn-primary mb-2">
                     <i class="fas fa-plus"></i> Añadir a stock
                 </button>
+                <a href="{{ route('admin.productos.create') }}" class="btn btn-warning mb-2 ml-2">
+                    <i class="fas fa-box-open"></i> Añadir producto
+                </a>
             </form>
         </div>
     </div>
 
     <div class="card">
         <div class="card-header">
-            <h3 class="card-title">Historial de compras/entradas de stock</h3>
+            <h3 class="card-title">Historial de compras / entradas de stock</h3>
         </div>
         <div class="card-body table-responsive p-0">
             <table class="table table-hover table-striped mb-0">
@@ -70,20 +77,60 @@
                 <tr>
                     <th>Fecha</th>
                     <th>Producto</th>
-                    <th class="text-right">Unidades</th>
-                    <th style="width:80px;">Acciones</th>
+                    <th>Proveedor</th>
+                    <th class="text-right">Precio unidad</th>
+                    <th class="text-center" style="width:160px">Unidades</th>
+                    <th style="width:80px;" class="text-right">Acciones</th>
                 </tr>
                 </thead>
                 <tbody>
                 @forelse($compras as $compra)
+                    @php
+                        $producto   = $compra->producto;
+                        $precioU    = $producto ? (float)($producto->precio ?? 0) : 0;
+                        $totalLinea = $precioU * (int)$compra->unidades;
+                    @endphp
                     <tr>
                         <td>{{ optional($compra->created_at)->format('d/m/Y H:i') }}</td>
-                        <td>{{ $compra->producto->nombre ?? '—' }}</td>
-                        <td class="text-right">{{ $compra->unidades }}</td>
+                        <td>{{ $producto->nombre ?? '—' }}</td>
+                        <td>{{ $producto->proveedor->nombre ?? '—' }}</td>
                         <td class="text-right">
-                            <form action="{{ route('admin.compras.destroy', $compra) }}"
-                                  method="POST"
-                                  onsubmit="return confirm('¿Eliminar este registro de compra? Se ajustará el stock en negativo.');">
+                            {{ number_format($precioU, 2, ',', '.') }} €
+                        </td>
+                        <td class="text-center">
+                            <div class="d-inline-flex align-items-center">
+
+                                @if($compra->unidades > 1)
+                                    <form action="{{ route('admin.compras.update', $compra) }}"
+                                          method="POST" class="mr-1">
+                                        @csrf
+                                        @method('PUT')
+                                        <input type="hidden" name="unidades"
+                                               value="{{ $compra->unidades - 1 }}">
+                                        <button class="btn btn-xs btn-outline-secondary"
+                                                title="Restar 1">
+                                            <i class="fas fa-minus"></i>
+                                        </button>
+                                    </form>
+                                @endif
+
+                                <span class="badge badge-light px-2 py-1">
+                                    {{ $compra->unidades }}
+                                </span>
+
+                                <form action="{{ route('admin.compras.update', $compra) }}"
+                                      method="POST" class="ml-1">
+                                    @csrf
+                                    @method('PUT')
+                                    <input type="hidden" name="unidades" value="{{ $compra->unidades + 1 }}">
+                                    <button class="btn btn-xs btn-outline-secondary" title="Sumar 1">
+                                        <i class="fas fa-plus"></i>
+                                    </button>
+                                </form>
+                            </div>
+                        </td>
+                        <td class="text-center">
+                            <form action="{{ route('admin.compras.destroy', $compra) }}" method="POST" onsubmit="return confirm('¿Eliminar este registro de compra? Se ajustará el stock en negativo.');">
                                 @csrf
                                 @method('DELETE')
                                 <button class="btn btn-sm btn-danger">
@@ -94,7 +141,7 @@
                     </tr>
                 @empty
                     <tr>
-                        <td colspan="6" class="text-center text-muted">
+                        <td colspan="7" class="text-center text-muted">
                             No hay compras registradas todavía.
                         </td>
                     </tr>

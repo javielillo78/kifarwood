@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
+use App\Models\Proveedor;
 
 class Producto extends Model
 {
@@ -14,6 +15,7 @@ class Producto extends Model
         'descripcion',
         'precio',
         'stock',
+        'proveedor_id'
     ];
     // relación: un producto pertenece a una categoría
     public function categoria()
@@ -29,5 +31,9 @@ class Producto extends Model
     public function compras()
     {
         return $this->hasMany(\App\Models\Compra::class);
+    }
+    public function proveedor()
+    {
+        return $this->belongsTo(Proveedor::class, 'proveedor_id');
     }
 }

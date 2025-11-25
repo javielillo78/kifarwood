@@ -211,10 +211,12 @@
                     <i class="fa fa-right-from-bracket mr-2"></i> {{ __('site.auth.logout') }}
                   </button>
                 </form>
+                <a class="dropdown-item text-light" href="{{ route('public.pedidos.index') }}">
+                    <i class="fas fa-shopping-bag mr-2"></i> Mis pedidos
+                </a>
               </div>
             </li>
           @endguest
-
         </ul>
       </div>
     </div>

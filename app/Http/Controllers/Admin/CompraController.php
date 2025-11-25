@@ -13,9 +13,12 @@ class CompraController extends Controller
 {
     public function index(Request $request)
     {
-        $productos = Producto::orderBy('nombre')->get();
-
-        $compras = Compra::with(['producto','usuario'])
+        // Productos para el select
+        $productos = Producto::with('proveedor')
+            ->orderBy('nombre')
+            ->get();
+        // Historial de compras con producto y proveedor
+        $compras = Compra::with(['producto.proveedor','usuario'])
             ->orderByDesc('created_at')
             ->paginate(20);
 
@@ -31,9 +34,9 @@ class CompraController extends Controller
 
         DB::transaction(function () use ($data) {
             $producto = Producto::lockForUpdate()->findOrFail($data['producto_id']);
-
+            // Sumamos al stock
             $producto->increment('stock', $data['unidades']);
-
+            // Registramos la entrada
             Compra::create([
                 'producto_id' => $producto->id,
                 'user_id'     => Auth::id(),
@@ -42,6 +45,35 @@ class CompraController extends Controller
         });
 
         return back()->with('compras_ok', 'Entrada de stock registrada correctamente.');
+    }
+
+    public function update(Request $request, Compra $compra)
+    {
+        $data = $request->validate([
+            'unidades' => ['required','integer','min:1'],
+        ]);
+
+        $nuevo = (int) $data['unidades'];
+        $viejo = (int) $compra->unidades;
+
+        if ($nuevo === $viejo) {
+            return back();
+        }
+
+        $diff = $nuevo - $viejo; // >0 suma stock, <0 resta stock
+
+        DB::transaction(function () use ($compra, $nuevo, $diff) {
+            // Ajustamos unidades de la compra
+            $compra->update(['unidades' => $nuevo]);
+            // Ajustamos stock del producto
+            $producto = $compra->producto()->lockForUpdate()->first();
+            if ($producto) {
+                $nuevoStock = max(0, (int)$producto->stock + $diff);
+                $producto->update(['stock' => $nuevoStock]);
+            }
+        });
+
+        return back()->with('compras_ok', 'Unidades actualizadas correctamente.');
     }
 
     public function destroy(Compra $compra)

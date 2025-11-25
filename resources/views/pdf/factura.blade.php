@@ -9,11 +9,33 @@
     $fechaBase = $pedido->fecha_pedido ?? $pedido->created_at;
     $fecha     = $fechaBase ? \Carbon\Carbon::parse($fechaBase)->format('d/m/Y') : '';
 
-    $cliente   = $pedido->usuario ?? auth()->user();
+    $clienteModel = $pedido->usuario ?? auth()->user();
     $detalles  = $pedido->detalles ?? collect();
 
-    // Más filas para que el pie baje un poco más
     $maxFilasDetalle = 22;
+
+    $clienteNombre = $clienteModel->name  ?? '—';
+    $clienteEmail  = $clienteModel->email ?? '—';
+    $clienteNif    = $clienteModel->nif   ?? '';
+
+    $dirParts = [];
+    if (!empty($clienteModel->direccion)) {
+        $dirParts[] = $clienteModel->direccion;
+    }
+
+    $locParts = [];
+    if (!empty($clienteModel->cp)) {
+        $locParts[] = $clienteModel->cp;
+    }
+    if (!empty($clienteModel->ciudad)) {
+        $locParts[] = $clienteModel->ciudad;
+    }
+    if (!empty($clienteModel->provincia)) {
+        $locParts[] = $clienteModel->provincia;
+    }
+
+    $clienteDirLinea1 = implode(' ', $dirParts);
+    $clienteDirLinea2 = implode(' · ', $locParts);
 @endphp
 <!doctype html>
 <html lang="es">
@@ -22,7 +44,7 @@
     <title>Factura #{{ $pedido->id }}</title>
     <style>
         @page {
-            margin: 18px 20px;
+            margin: 15px 14px;
         }
         * { box-sizing:border-box; }
         body {
@@ -151,6 +173,11 @@
             <small>CTRA. A - 440 KM.7, LA · 14120 FUENTE PALMERA</small><br>
             <small>B67655993</small>
         </div>
+        <div class="col" style="text-align:right;">
+            <div class="header-blue" style="font-size:14px; padding:4px 0; display:inline-block; min-width:120px;">
+                FACTURA
+            </div>
+        </div>
     </div>
 
     <div class="subband" style="margin-bottom:4px;">
@@ -159,17 +186,29 @@
 
     <div class="row" style="margin-bottom:3px;">
         <div class="col box" style="min-height:40px;">
-            <strong>{{ $cliente?->name ?? '—' }}</strong><br>
-            <span class="small">{{ $cliente?->email ?? '—' }}</span>
+            <strong>{{ $clienteNombre }}</strong><br>
+            <span class="small">{{ $clienteEmail }}</span><br>
+            @if($clienteNif)
+                <span class="small">NIF: {{ $clienteNif }}</span><br>
+            @endif
+            @if($clienteDirLinea1 || $clienteDirLinea2)
+                <span class="small">
+                    {{ $clienteDirLinea1 }}
+                    @if($clienteDirLinea1 && $clienteDirLinea2)
+                        ·
+                    @endif
+                    {{ $clienteDirLinea2 }}
+                </span>
+            @endif
         </div>
     </div>
 
-    <div class="row" style="margin-bottom:6px;">
-        <div class="col" style="max-width:140px;">
+    <div class="row" style="margin-bottom:6px; justify-content:flex-end;">
+        <div class="col" style="max-width:120px;">
             <div class="box-label">Número</div>
             <div class="box center">{{ $numero }}</div>
         </div>
-        <div class="col" style="max-width:140px;">
+        <div class="col" style="max-width:120px;">
             <div class="box-label">Fecha</div>
             <div class="box center">{{ $fecha }}</div>
         </div>

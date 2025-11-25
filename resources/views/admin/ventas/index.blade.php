@@ -109,19 +109,10 @@
                             <td>
                                 <span class="badge badge-success">{{ ucfirst($pedido->estado) }}</span>
                             </td>
-                            <td class="text-right">
+                            <td class="text-center">
                                 <a href="{{ route('public.cesta.factura', $pedido) }}" class="btn btn-sm btn-primary" target="_blank">
                                     <i class="fas fa-file-pdf"></i>
                                 </a>
-                                <form action="{{ route('admin.ventas.destroy', $pedido) }}" method="POST"
-                                      class="d-inline"
-                                      onsubmit="return confirm('¿Eliminar este pedido? Esta acción no se puede deshacer.');">
-                                    @csrf
-                                    @method('DELETE')
-                                    <button class="btn btn-sm btn-danger">
-                                        <i class="fas fa-trash"></i>
-                                    </button>
-                                </form>
                             </td>
                         </tr>
                     @empty

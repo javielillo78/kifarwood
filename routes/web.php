@@ -8,6 +8,7 @@ use App\Http\Controllers\Frontend\ServicioPublicController;
 use App\Http\Controllers\Frontend\ContactoController;
 use App\Http\Controllers\Frontend\CestaController;
 use App\Http\Controllers\Frontend\CheckoutController;
+use App\Http\Controllers\Frontend\PedidoPublicController;
 use App\Http\Controllers\LocaleController;
 use App\Http\Controllers\Admin\ProductoController;
 use App\Http\Controllers\Admin\CategoriaController;
@@ -16,6 +17,7 @@ use App\Http\Controllers\Admin\ImagenController;
 use App\Http\Controllers\Admin\ServicioController;
 use App\Http\Controllers\Admin\VentaController;
 use App\Http\Controllers\Admin\CompraController;
+use App\Http\Controllers\Admin\ProveedorController;
 use App\Http\Controllers\Auth\LoginController;
 use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
@@ -76,6 +78,15 @@ Route::middleware(['auth', AdminMiddleware::class])->group(function () {
     Route::delete('/admin/servicios/imagenes/{imagen}', [ServicioController::class, 'destroyImagen'])->name('admin.servicios.imagenes.destroy');
     Route::get('/admin/ventas', [VentaController::class, 'index'])->name('admin.ventas.index');
     Route::delete('/admin/ventas/{pedido}', [VentaController::class, 'destroy'])->name('admin.ventas.destroy');
-    Route::resource('/admin/compras', CompraController::class)->names('admin.compras')->only(['index','store','destroy']);
+    Route::resource('/admin/compras', CompraController::class)
+    ->names('admin.compras')
+    ->only(['index','store','update','destroy']);
+    Route::resource('/admin/proveedores', ProveedorController::class)
+    ->names('admin.proveedores')
+    ->except(['show']);
+});
 
+Route::middleware('auth')->group(function () {
+    Route::get('/mis-pedidos', [PedidoPublicController::class, 'index'])
+        ->name('public.pedidos.index');
 });

@@ -354,11 +354,16 @@ return [
             'icon' => 'fas fa-fw fa-th',
         ],
         [
+            'text' => 'Proveedores',
+            'url' => 'admin/proveedores',
+            'icon' => 'fas fa-briefcase',
+        ],
+        [
             'text' => 'Gestión de ventas',
             'url' => 'admin/ventas',
             'icon' => 'fas fa-shopping-cart',
         ],
-         [
+        [
             'text' => 'Gestión de compras',
             'url' => 'admin/compras',
             'icon' => 'fas fa-shopping-bag',

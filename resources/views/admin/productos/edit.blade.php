@@ -30,6 +30,18 @@
                     @error('categoria_id') <span class="text-danger">{{ $message }}</span> @enderror
                 </div>
                 <div class="form-group">
+                <label>Proveedor</label>
+                <select name="proveedor_id" class="form-control">
+                    <option value="">-- Sin proveedor --</option>
+                    @foreach($proveedores as $prov)
+                        <option value="{{ $prov->id }}"
+                                {{ old('proveedor_id', $producto->proveedor_id) == $prov->id ? 'selected' : '' }}>
+                            {{ $prov->nombre }}
+                        </option>
+                    @endforeach
+                </select>
+                </div>
+                <div class="form-group">
                     <label>Nombre</label>
                     <input name="nombre" class="form-control" value="{{ old('nombre', $producto->nombre) }}" required>
                     @error('nombre') <span class="text-danger">{{ $message }}</span> @enderror
