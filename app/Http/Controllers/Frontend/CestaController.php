@@ -12,6 +12,8 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Barryvdh\DomPDF\Facade\Pdf;
 use App\Models\Pago;
+use Stripe\Stripe;
+use Stripe\PaymentIntent;
 
 class CestaController extends Controller
 {
@@ -129,7 +131,6 @@ class CestaController extends Controller
         }
 
         if ($request->user()) {
-            // Aquí $detalle ya tiene pedido_id porque viene de la relación firstOrNew
             $detalle->precio_unitario = (float)$producto->precio;
             $detalle->cantidad        = $yaLleva + $qtyAAgregar;
             $detalle->subtotal        = $detalle->cantidad * $detalle->precio_unitario;
@@ -250,18 +251,15 @@ class CestaController extends Controller
     public function checkout(Request $request)
     {
         $user = $request->user();
-
         $pedido = Pedido::with('detalles.producto')
             ->where('user_id', $user->id)
             ->where('estado', 'carrito')
             ->first();
-
         if (!$pedido || $pedido->detalles->count() === 0) {
             return redirect()
                 ->route('public.cesta.index')
                 ->with('cart_err', 'Tu cesta está vacía.');
         }
-
         $items = [];
         foreach ($pedido->detalles as $d) {
             $items[] = [
@@ -273,36 +271,56 @@ class CestaController extends Controller
                 'id'       => (int) $d->producto_id,
             ];
         }
-
         $total = array_sum(array_map(fn($i) => $i['subtotal'], $items));
         $base  = round($total / 1.21, 2);
         $iva   = round($total - $base, 2);
 
-        return view('public.cesta.checkout', compact('items','total','base','iva'));
+        Stripe::setApiKey(config('services.stripe.secret'));
+        $paymentIntent = PaymentIntent::create([
+            'amount'   => (int) round($total * 100), 
+            'currency' => config('services.stripe.currency', 'eur'),
+            'payment_method_types' => ['card'],
+            'metadata' => [
+                'pedido_id' => $pedido->id,
+                'user_id'   => $user->id,
+            ],
+            'receipt_email' => $user->email,
+        ]);
+        $clientSecret = $paymentIntent->client_secret;
+        return view('public.cesta.checkout', compact(
+            'items', 'total', 'base', 'iva', 'clientSecret'
+        ));
     }
 
     public function confirmar(Request $request)
     {
         $user = $request->user();
-
         $data = $request->validate([
+            'payment_intent_id' => ['required','string'],
             'nif'       => ['required','string','max:20'],
             'direccion' => ['required','string','max:255'],
             'cp'        => ['required','string','max:10'],
             'ciudad'    => ['required','string','max:120'],
-            'provincia' => ['required','string','max:120'],
+            // 'provincia' => ['required','string','max:120'],
             'telefono'  => ['nullable','string','max:20'],
         ]);
-
+        $paymentIntentId = $request->input('payment_intent_id');
+        Stripe::setApiKey(config('services.stripe.secret'));
+        $pi = PaymentIntent::retrieve($paymentIntentId);
+        if ($pi->status !== 'succeeded') {
+            return redirect()
+                ->route('public.cesta.checkout')
+                ->with('cart_err', 'El pago no se ha completado correctamente. Inténtalo de nuevo.');
+        }
         $user->nif       = $data['nif'];
         $user->direccion = $data['direccion'];
         $user->cp        = $data['cp'];
         $user->ciudad    = $data['ciudad'];
-        $user->provincia = $data['provincia'];
+        // $user->provincia = $data['provincia'];
         $user->telefono  = $data['telefono'] ?? null;
         $user->save();
-
         $pedido = $this->carritoDe($user->id)->load('detalles.producto');
+
         if (!$pedido || $pedido->detalles()->count() === 0) {
             return redirect()->route('public.cesta.index')->with('cart_err', 'Tu cesta está vacía.');
         }
@@ -459,7 +477,7 @@ class CestaController extends Controller
             'poblacion'  => $city,
             'ciudad'     => $city,
             'city'       => $city,
-            'provincia'  => $state,
+            // 'provincia'  => $state,
             'state'      => $state,
             'region'     => $state,
             'telefono'   => $phone,
@@ -481,7 +499,7 @@ class CestaController extends Controller
                 'zip'       => '',
                 'city'      => '',
                 'poblacion' => '',
-                'provincia' => '',
+                // 'provincia' => '',
                 'state'     => '',
                 'phone'     => '',
                 'telefono'  => '',
@@ -496,7 +514,7 @@ class CestaController extends Controller
         $dir    = $user->direccion    ?? '';
         $zip    = $user->cp           ?? '';
         $city   = $user->ciudad       ?? '';
-        $state  = $user->provincia    ?? '';
+        // $state  = $user->provincia    ?? '';
         $phone  = $user->telefono     ?? '';
         $nif    = $user->nif          ?? $user->cif ?? '';
 
@@ -511,8 +529,8 @@ class CestaController extends Controller
             'zip'       => $zip,
             'city'      => $city,
             'poblacion' => $city,
-            'provincia' => $state,
-            'state'     => $state,
+            // 'provincia' => $state,
+            // 'state'     => $state,
             'telefono'  => $phone,
             'phone'     => $phone,
             'nif'       => $nif,

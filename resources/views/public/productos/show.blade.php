@@ -2,7 +2,7 @@
 
 @php use Illuminate\Support\Str; @endphp
 
-@section('title', ($producto->nombre ?? 'Producto').' · '.__('site.brand'))
+@section('title', ($producto->nombre ?? __('site.products.title')).' · '.__('site.brand'))
 
 @section('content')
   <nav aria-label="breadcrumb">
@@ -37,11 +37,11 @@
           @if($imgs->count() > 1)
             <a class="carousel-control-prev" href="#prodShow-{{ $producto->id }}" role="button" data-slide="prev">
               <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-              <span class="sr-only">Anterior</span>
+              <span class="sr-only">@lang('site.common.previous')</span>
             </a>
             <a class="carousel-control-next" href="#prodShow-{{ $producto->id }}" role="button" data-slide="next">
               <span class="carousel-control-next-icon" aria-hidden="true"></span>
-              <span class="sr-only">Siguiente</span>
+              <span class="sr-only">@lang('site.common.next')</span>
             </a>
           @endif
         </div>
@@ -65,7 +65,7 @@
     <div class="col-lg-6 mb-3">
       <div class="glass p-4 h-100 position-relative">
         <a href="{{ route('public.productos.index') }}" class="btn btn-login btn-sm" style="position:absolute; top:12px; right:12px; z-index:2">
-          <i class="fa fa-arrow-left mr-1"></i> Volver
+          <i class="fa fa-arrow-left mr-1"></i> @lang('site.common.back')
         </a>
         @php
           $stockDisp = (int)($producto->stock ?? 0);
@@ -86,9 +86,9 @@
         <div class="d-flex align-items-center mb-2" style="gap:10px">
           <span class="badge badge-light">{{ $producto->categoria->nombre ?? '—' }}</span>
           @if($stockDisp > 0)
-            <span class="badge badge-success">En stock</span>
+            <span class="badge badge-success">@lang('site.products.in_stock')</span>
           @else
-            <span class="badge badge-secondary">Sin stock</span>
+            <span class="badge badge-secondary">@lang('site.products.out_of_stock')</span>
           @endif
         </div>
         <h1 class="mb-2" style="font-weight:800">{{ $producto->nombre }}</h1>
@@ -100,52 +100,59 @@
         @endif
         <div class="d-flex align-items-center" style="gap:10px">
           @if($stockDisp <= 0)
-            <button class="btn btn-secondary" disabled style="opacity:.8;cursor:not-allowed">
-              Sin stock disponible
-            </button>
+              @auth
+                  @if(!empty($yaPideAvisoStock))
+                      <button class="btn btn-secondary" disabled style="opacity:.8;cursor:not-allowed">
+                          @lang('site.products.notify_stock')
+                      </button>
+                  @else
+                      <form action="{{ route('public.productos.stock-alert', $producto) }}"
+                            method="POST"
+                            class="d-flex align-items-center" style="gap:10px">
+                          @csrf
+                          <button class="btn btn-outline-light">
+                              <i class="fa fa-bell mr-1"></i> @lang('site.products.notify_me')
+                          </button>
+                      </form>
+                  @endif
+              @else
+                  <a href="{{ route('login', ['redirect_to' => route('public.productos.show', $producto)]) }}"
+                    class="btn btn-outline-light">
+                      <i class="fa fa-bell mr-1"></i> @lang('site.products.login_notify')
+                  </a>
+              @endauth
           @elseif($maxAdd <= 0)
-            <button class="btn btn-secondary" disabled style="opacity:.8;cursor:not-allowed">
-              No puedes añadir más unidades
-            </button>
+              <div>
+                <small class="d-block mt-2 text-warning" style="font-size:.85rem;">
+                  <i class="fa fa-circle-exclamation mr-1"></i>
+                  @lang('site.products.max_reached')
+                </small>
+              </div>
           @else
-            <form action="{{ route('public.cesta.add', $producto) }}" method="POST" class="d-flex align-items-center" style="gap:10px">
-              @csrf
-              <input type="number" name="qty" min="1" max="{{ $maxAdd }}" value="1" class="form-control" style="width:90px">
-              <button class="btn btn-primary">
-                <i class="fa fa-cart-plus mr-1"></i> Añadir a la cesta
-              </button>
-            </form>
+              <form action="{{ route('public.cesta.add', $producto) }}" method="POST" class="d-flex align-items-center" style="gap:10px">
+                @csrf
+                <select name="qty" class="form-control" style="width:100px">
+                  @for($i = 1; $i <= $maxAdd; $i++)
+                    <option value="{{ $i }}">{{ $i }}</option>
+                  @endfor
+                </select>
+                <button class="btn btn-primary">
+                  <i class="fa fa-cart-plus mr-1"></i> @lang('site.products.add_to_cart')
+                </button>
+              </form>
           @endif
         </div>
-        <div class="mt-3">
-          @if(session('cart_err'))
-            <div class="alert alert-danger mb-2" style="background:rgba(220,53,69,.12);border-color:rgba(220,53,69,.35);color:#ffc4cc;">
-              <i class="fa fa-circle-exclamation mr-1"></i>
-              {{ session('cart_err') }}
-            </div>
-          @endif
-          @if(session('cart_ok'))
-            <div class="alert alert-success mb-0" style="background:rgba(40,167,69,.14);border-color:rgba(40,167,69,.35);color:#c7ffd7;">
-              <i class="fa fa-check-circle mr-1"></i>
-              {{ session('cart_ok') }}
-            </div>
-          @endif
-        </div>
+
         <div class="mt-3">
           @if($stockDisp > 0 && $maxAdd > 0 && $maxAdd <= 2)
               <div class="alert alert-warning mb-2" style="background:rgba(255,193,7,.10);border-color:rgba(255,193,7,.35);color:#ffe29a;">
                 <i class="fa fa-exclamation-triangle mr-1"></i>
-                Solo puedes añadir <strong>{{ $maxAdd }}</strong> unidad(es) de este producto.
+                @lang('site.products.limited_units', ['count' => $maxAdd])
               </div>
-            @elseif($maxAdd <= 0 && $stockDisp > 0)
-              <div class="alert alert-danger mb-2" style="background:rgba(220,53,69,.12);border-color:rgba(220,53,69,.35);color:#ffc4cc;">
-                <i class="fa fa-ban mr-1"></i>
-                Has alcanzado el número máximo de unidades disponibles de este producto.
-              </div>
-            @endif
+          @endif
         </div>
         <hr class="my-4" style="border-color:#2a292a">
-        <small class="text-muted">Ref. PROD-{{ str_pad($producto->id, 5, '0', STR_PAD_LEFT) }}</small>
+        <small class="text-muted">@lang('site.products.ref'): PROD-{{ str_pad($producto->id, 5, '0', STR_PAD_LEFT) }}</small>
       </div>
     </div>
   </div>

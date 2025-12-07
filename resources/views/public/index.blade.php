@@ -1,24 +1,26 @@
 @extends('public.layout')
 
-@section('title','Inicio · Kifar Wood Studios')
+@section('title', __('site.nav.home').' · '.__('site.brand'))
 
 @section('content')
   <div class="glass pulse p-4 p-md-5 mb-4">
     <div class="row align-items-center">
       <div class="col-lg-6">
         <span class="badge badge-pill" style="background:rgba(188,34,37,.2); color:#ffdede; border:1px solid rgba(188,34,37,.45);">
-          Hecho a mano · Madera de calidad
+          @lang('site.hero.badge')
         </span>
-        <h1 class="mt-3 mb-2" style="font-weight:800; letter-spacing:.2px;">Diseño y carpintería a medida</h1>
+        <h1 class="mt-3 mb-2" style="font-weight:800; letter-spacing:.2px;">
+          @lang('site.hero.title')
+        </h1>
         <p class="text-muted mb-3" style="max-width:540px">
-          Piezas únicas en madera: mesas, estanterías, decoración y proyectos personalizados para tu hogar o negocio.
+          @lang('site.hero.subtitle')
         </p>
         <div>
           <a class="btn btn-primary mr-2" href="{{ route('public.productos.index') }}">
-            Explorar productos
+            @lang('site.hero.cta_shop')
           </a>
           <a class="btn btn-login" href="{{ route('public.contacto.index') }}">
-            Pedir presupuesto
+            @lang('site.hero.cta_quote')
           </a>
         </div>
       </div>
@@ -31,15 +33,13 @@
     </div>
   </div>
 
-  @php
-    use Illuminate\Support\Str;
-  @endphp
+  @php use Illuminate\Support\Str; @endphp
 
   @if($novedades->count())
     <div class="glass p-3 p-md-4 mb-4">
       <div class="d-flex align-items-center justify-content-between mb-2">
-        <h2 class="mb-0" style="font-weight:800">Novedades</h2>
-        <a href="{{ route('public.productos.index') }}" class="text-muted">Ver todos</a>
+        <h2 class="mb-0" style="font-weight:800">@lang('site.products.title')</h2>
+        <a href="{{ route('public.productos.index') }}" class="text-muted">@lang('site.common.view_all')</a>
       </div>
       <div id="novedadesCarousel" class="carousel slide" data-ride="carousel" data-interval="3500" data-pause="false" data-touch="true" data-wrap="true">
         @if($novedades->count() > 1)
@@ -66,11 +66,11 @@
                   </a>
                 </div>
                 <div class="col-lg-5">
-                  <span class="badge badge-light mb-2">Nuevo</span>
+                  <span class="badge badge-light mb-2">@lang('site.products.new')</span>
                   <h3 class="mb-2" style="font-weight:800">{{ $p->nombre }}</h3>
                   <div class="text-muted mb-2">{{ $p->categoria->nombre ?? '—' }}</div>
-                  <div class="text-warning font-weight-bold mb-3">{{ number_format($p->precio,2,',','.') }} €</div>
-                  <a class="btn btn-primary" href="{{ route('public.productos.show', $p) }}">Ver producto</a>
+                  <div class="font-weight-bold mb-3" style="color:green">{{ number_format($p->precio,2,',','.') }} €</div>
+                  <a class="btn btn-primary" href="{{ route('public.productos.show', $p) }}">@lang('site.products.see_product')</a>
                 </div>
               </div>
             </div>
@@ -79,11 +79,11 @@
         @if($novedades->count() > 1)
           <a class="carousel-control-prev" href="#novedadesCarousel" role="button" data-slide="prev">
             <span class="carousel-control-prev-icon" aria-hidden="true"></span>
-            <span class="sr-only">Anterior</span>
+            <span class="sr-only">@lang('site.common.previous')</span>
           </a>
           <a class="carousel-control-next" href="#novedadesCarousel" role="button" data-slide="next">
             <span class="carousel-control-next-icon" aria-hidden="true"></span>
-            <span class="sr-only">Siguiente</span>
+            <span class="sr-only">@lang('site.common.next')</span>
           </a>
         @endif
       </div>
@@ -94,10 +94,10 @@
     <div class="glass p-3 p-md-4 mb-4" style="background:linear-gradient(145deg, rgba(12,12,12,.95), rgba(188,34,37,.22));">
       <div class="d-flex align-items-center justify-content-between mb-3">
         <div>
-          <h2 class="mb-0" style="font-weight:800">Más vendidos</h2>
-          <small class="text-muted">Lo que más se está llevando la gente últimamente</small>
+          <h2 class="mb-0" style="font-weight:800">@lang('site.products.top_sales')</h2>
+          <small class="text-muted">@lang('site.products.top_sales_subtitle')</small>
         </div>
-        <a href="{{ route('public.productos.index') }}" class="text-muted">Ver catálogo</a>
+        <a href="{{ route('public.productos.index') }}" class="text-muted">@lang('site.common.view_catalog')</a>
       </div>
 
       <div class="row">
@@ -114,17 +114,17 @@
                 <img src="{{ $url }}" alt="{{ $p->nombre }}" class="w-100 h-100" style="object-fit:cover;">
                 <div style="position:absolute; top:8px; left:8px;">
                   <span class="badge badge-warning" style="font-size:.7rem;">
-                    <i class="fa fa-crown mr-1"></i>Top ventas
+                    <i class="fa fa-crown mr-1"></i> @lang('site.products.top_sales')
                   </span>
                 </div>
                 @if(($p->stock ?? 0) <= 0)
                   <div style="position:absolute; bottom:8px; left:8px;">
-                    <span class="badge badge-secondary" style="font-size:.7rem;">Sin stock</span>
+                    <span class="badge badge-secondary" style="font-size:.7rem;">@lang('site.products.out_of_stock')</span>
                   </div>
                 @elseif(($p->stock ?? 0) <= 3)
                   <div style="position:absolute; bottom:8px; left:8px;">
                     <span class="badge badge-danger" style="font-size:.7rem;">
-                      Solo {{ $p->stock }} en stock
+                      @lang('site.products.low_stock', ['count' => $p->stock])
                     </span>
                   </div>
                 @endif
@@ -137,15 +137,15 @@
                   {{ Str::limit($p->nombre, 40) }}
                 </div>
                 <div class="d-flex justify-content-between align-items-center mb-2">
-                  <span style="color:#ffd27f; font-weight:700; font-size:1.05rem;">
+                  <span style="color:green; font-weight:700; font-size:1.05rem;">
                     {{ number_format($p->precio,2,',','.') }} €
                   </span>
                   <small class="text-muted" style="font-size:.8rem;">
-                    Vendidos: {{ $vendidos }}
+                    @lang('site.products.sold'): {{ $vendidos }}
                   </small>
                 </div>
                 <a href="{{ route('public.productos.show', $p) }}" class="btn btn-sm btn-primary mt-auto">
-                  Ver detalle
+                  @lang('site.products.see_product')
                 </a>
               </div>
             </div>

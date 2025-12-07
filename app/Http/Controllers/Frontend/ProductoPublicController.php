@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Frontend;
 
 use App\Http\Controllers\Controller;
 use App\Models\Producto;
+use App\Models\StockAlert;
+use Illuminate\Support\Facades\Auth;
 
 class ProductoPublicController extends Controller
 {
@@ -15,9 +17,17 @@ class ProductoPublicController extends Controller
 
         return view('public.productos.index', compact('productos'));
     }
-    public function show(\App\Models\Producto $producto)
+
+    public function show(Producto $producto)
     {
         $producto->load(['imagenes','categoria']);
-        return view('public.productos.show', compact('producto'));
+        $yaPideAvisoStock = false;
+        if (Auth::check()) {
+            $yaPideAvisoStock = StockAlert::where('user_id', Auth::id())
+                ->where('producto_id', $producto->id)
+                ->whereNull('notified_at')
+                ->exists();
+        }
+        return view('public.productos.show', compact('producto', 'yaPideAvisoStock'));
     }
 }

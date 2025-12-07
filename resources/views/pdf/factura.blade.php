@@ -55,7 +55,7 @@
         .page {
             width:100%;
             border:1px solid #003366;
-            padding:8px 10px 4px 10px;
+            padding: 1px;
         }
         .row { display:flex; width:100%; }
         .col { flex:1 1 0; }
@@ -203,12 +203,13 @@
         </div>
     </div>
 
-    <div class="row" style="margin-bottom:6px; justify-content:flex-end;">
-        <div class="col" style="max-width:120px;">
+    <div class="row" style="margin-bottom:6px; justify-content:flex-end; display:flex; gap:10px;">
+        <div style="width:120px;">
             <div class="box-label">Número</div>
             <div class="box center">{{ $numero }}</div>
         </div>
-        <div class="col" style="max-width:120px;">
+
+        <div style="width:120px;">
             <div class="box-label">Fecha</div>
             <div class="box center">{{ $fecha }}</div>
         </div>
@@ -220,7 +221,7 @@
                 <th style="width:10%;">Código</th>
                 <th>Descripción</th>
                 <th style="width:8%;" class="center">Cant.</th>
-                <th style="width:15%;" class="right">Preci/u</th>
+                <th style="width:15%;" class="right">Precio/u</th>
                 <th style="width:8%;" class="center">Dto.</th>
                 <th style="width:8%;" class="center">%I</th>
                 <th style="width:15%;" class="right">Importe</th>

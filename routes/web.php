@@ -23,6 +23,7 @@ use App\Http\Controllers\Auth\RegisterController;
 use App\Http\Controllers\Auth\ForgotPasswordController;
 use App\Http\Controllers\Auth\ResetPasswordController;
 use App\Http\Controllers\Auth\VerificationController;
+use App\Http\Controllers\PublicStockAlertController;
 
 Route::get('login', [LoginController::class, 'showLoginForm'])->name('login');
 Route::post('login', [LoginController::class, 'login']);
@@ -47,6 +48,8 @@ Route::get('/contacto', [ContactoController::class, 'index'])
     ->name('public.contacto.index');
 Route::post('/contacto', [ContactoController::class, 'send'])
     ->name('public.contacto.send');
+Route::post('/productos/{producto}/stock-alert', [PublicStockAlertController::class,'store'])
+    ->name('public.productos.stock-alert')->middleware('auth');
 
 Route::prefix('cesta')->name('public.cesta.')->group(function () {
     Route::get('/',                     [CestaController::class, 'index'])->name('index');
