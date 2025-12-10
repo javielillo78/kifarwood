@@ -1,66 +1,73 @@
 <?php
 
-// namespace Database\Seeders;
+namespace Database\Seeders;
 
-// use Illuminate\Database\Seeder;
-// use Illuminate\Support\Str;
-// use Illuminate\Support\Facades\Schema;
-// use App\Models\Producto;
-// use App\Models\Categoria;
+use Illuminate\Database\Seeder;
+use App\Models\Producto;
+use App\Models\Categoria;
+use App\Models\Proveedor;
 
-// class ProductoSeeder extends Seeder
-// {
-//     public function run(): void
-//     {
-//         $tieneSlug = Schema::hasColumn('productos', 'slug');
+class ProductoSeeder extends Seeder
+{
+    /**
+     * Run the database seeds.
+     */
+    public function run(): void
+    {
+        // Crear o recuperar categorías
+        $categoriaPuertas = Categoria::firstOrCreate(['nombre' => 'Puertas y ventanas']);
+        $categoriaDecoracion = Categoria::firstOrCreate(['nombre' => 'Decoración artesanal']);
+        $categoriaSillas = Categoria::firstOrCreate(['nombre' => 'Sillas']);
 
-//         $productos = [
-//             [
-//                 'nombre'       => 'Silla de madera rústica',
-//                 'categoria'    => 'Sillas',
-//                 'precio'       => 120.00,
-//                 'stock'        => 10,
-//                 'descripcion'  => 'Silla de madera maciza, acabado rústico, ideal para comedor.',
-//             ],
-//             [
-//                 'nombre'       => 'Mesa de comedor industrial',
-//                 'categoria'    => 'Mesas',
-//                 'precio'       => 450.00,
-//                 'stock'        => 5,
-//                 'descripcion'  => 'Mesa con patas metálicas y sobre de madera maciza.',
-//             ],
-//             [
-//                 'nombre'       => 'Estantería flotante',
-//                 'categoria'    => 'Estanterías',
-//                 'precio'       => 80.00,
-//                 'stock'        => 15,
-//                 'descripcion'  => 'Estantería de pared, minimalista y funcional.',
-//             ],
-//         ];
+        // Crear o recuperar proveedores
+        $proveedorMueblam = Proveedor::firstOrCreate(['nombre' => 'Mueblam']);
+        $proveedorFranco = Proveedor::firstOrCreate(['nombre' => 'Franco Furniture']);
+        $proveedorJuan = Proveedor::firstOrCreate(['nombre' => 'Muebles Juan Aguilar']);
+        $proveedorTorres = Proveedor::firstOrCreate(['nombre' => 'Torres y Gutiérrez']);
 
-//         foreach ($productos as $p) {
-//             $categoria = Categoria::where('nombre', $p['categoria'])->first();
+        // Productos
+        Producto::updateOrCreate(
+            ['nombre' => 'Puerta Entrada Madera Maciza'],
+            [
+                'categoria_id' => $categoriaPuertas->id,
+                'proveedor_id' => $proveedorMueblam->id,
+                'descripcion' => 'Puerta de entrada de madera maciza con detalle de lamas verticales.',
+                'precio' => 200.00,
+                'stock' => 1,
+            ]
+        );
 
-//             if (! $categoria) {
-//                 continue;
-//             }
+        Producto::updateOrCreate(
+            ['nombre' => 'Cocina de Diseño Minimalista'],
+            [
+                'categoria_id' => $categoriaDecoracion->id,
+                'proveedor_id' => $proveedorFranco->id,
+                'descripcion' => 'Cocina de diseño minimalista y elegante.',
+                'precio' => 3500.00,
+                'stock' => 1,
+            ]
+        );
 
-//             $data = [
-//                 'nombre'       => $p['nombre'],
-//                 'descripcion'  => $p['descripcion'],
-//                 'precio'       => $p['precio'],
-//                 'stock'        => $p['stock'],
-//                 'categoria_id' => $categoria->id,
-//             ];
+        Producto::updateOrCreate(
+            ['nombre' => 'Cierre Divisor'],
+            [
+                'categoria_id' => $categoriaPuertas->id,
+                'proveedor_id' => $proveedorJuan->id,
+                'descripcion' => 'Cierre Divisor de dos hojas correderas a juego.',
+                'precio' => 320.00,
+                'stock' => 4,
+            ]
+        );
 
-//             if ($tieneSlug) {
-//                 $data['slug'] = Str::slug($p['nombre']);
-//             }
-
-//             Producto::updateOrCreate(
-//                 ['nombre' => $p['nombre']],
-//                 $data
-//             );
-//         }
-//     }
-// }
+        Producto::updateOrCreate(
+            ['nombre' => 'Silla Comedor'],
+            [
+                'categoria_id' => $categoriaSillas->id,
+                'proveedor_id' => $proveedorTorres->id,
+                'descripcion' => 'Test carrusel Novedades',
+                'precio' => 100.00,
+                'stock' => 2,
+            ]
+        );
+    }
+}
